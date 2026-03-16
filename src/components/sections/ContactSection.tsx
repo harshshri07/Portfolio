@@ -14,9 +14,7 @@ const ContactSection = () => {
         className="max-w-3xl"
       >
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Next Step</span>
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-foreground mt-4">
-          Let's work together
-        </h2>
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium text-foreground mt-4">Let's work together</h2>
 
         <a
           href="mailto:shrishrimal38@gmail.com"
@@ -64,3 +62,4 @@ const ContactSection = () => {
 };
 
 export default ContactSection;
+

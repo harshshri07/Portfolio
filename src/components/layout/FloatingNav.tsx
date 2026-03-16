@@ -50,3 +50,4 @@ const FloatingNav = () => {
 };
 
 export default FloatingNav;
+

@@ -9,11 +9,35 @@ const skillGroups = [
   },
   {
     title: "Data & ML",
-    skills: ["Pandas", "NumPy", "Matplotlib", "Seaborn", "Plotly", "Tableau", "TensorFlow", "PyTorch", "OpenCV", "Scikit-learn", "DSPy"],
+    skills: [
+      "Pandas",
+      "NumPy",
+      "Matplotlib",
+      "Seaborn",
+      "Plotly",
+      "Tableau",
+      "TensorFlow",
+      "PyTorch",
+      "OpenCV",
+      "Scikit-learn",
+      "DSPy",
+    ],
   },
   {
     title: "AI & Web",
-    skills: ["NLP", "LLMs", "Reinforcement Learning", "Generative AI", "RecSys", "Django", "Flask", "Celery", "REST APIs", "WebSockets", "Flutter"],
+    skills: [
+      "NLP",
+      "LLMs",
+      "Reinforcement Learning",
+      "Generative AI",
+      "RecSys",
+      "Django",
+      "Flask",
+      "Celery",
+      "REST APIs",
+      "WebSockets",
+      "Flutter",
+    ],
   },
   {
     title: "Cloud & Tools",
@@ -62,3 +86,4 @@ const SkillsSection = () => {
 };
 
 export default SkillsSection;
+

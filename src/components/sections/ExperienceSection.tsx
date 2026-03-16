@@ -56,10 +56,15 @@ const ExperienceSection = () => {
             </div>
             <div className="col-span-12 md:col-span-9">
               <h3 className="text-xl md:text-2xl font-medium text-foreground">{exp.title}</h3>
-              <p className="text-accent text-sm mt-1">{exp.company} — {exp.location}</p>
+              <p className="text-accent text-sm mt-1">
+                {exp.company} — {exp.location}
+              </p>
               <ul className="mt-4 space-y-2">
                 {exp.bullets.map((b, j) => (
-                  <li key={j} className="text-muted-foreground text-sm leading-relaxed pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[0.6em] before:w-1.5 before:h-px before:bg-muted-foreground/50">
+                  <li
+                    key={j}
+                    className="text-muted-foreground text-sm leading-relaxed pl-4 relative before:content-[''] before:absolute before:left-0 before:top-[0.6em] before:w-1.5 before:h-px before:bg-muted-foreground/50"
+                  >
                     {b}
                   </li>
                 ))}
@@ -80,3 +85,4 @@ const ExperienceSection = () => {
 };
 
 export default ExperienceSection;
+

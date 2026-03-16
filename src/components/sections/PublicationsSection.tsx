@@ -25,9 +25,7 @@ const PublicationsSection = () => {
         <div className="flex items-start gap-4">
           <FileText className="w-5 h-5 text-accent mt-1 shrink-0" strokeWidth={1.5} />
           <div>
-            <h3 className="text-lg md:text-xl font-medium text-foreground">
-              Review on Handwritten Character Recognition
-            </h3>
+            <h3 className="text-lg md:text-xl font-medium text-foreground">Review on Handwritten Character Recognition</h3>
             <p className="text-sm text-muted-foreground mt-2">
               International Journal of Innovative Research in Computer and Communication Engineering (IJIRCCE)
             </p>
@@ -43,3 +41,4 @@ const PublicationsSection = () => {
 };
 
 export default PublicationsSection;
+

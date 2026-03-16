@@ -7,7 +7,8 @@ const projects = [
   {
     title: "Bitcoin News Keyword Trend Analysis",
     category: "NLP / Data Analysis",
-    description: "Built an NLP pipeline using TextBlob and NewsAPI to match news keywords with CoinGecko price data. Ran Granger causality tests to analyze keyword-price relationships and deployed an interactive dashboard.",
+    description:
+      "Built an NLP pipeline using TextBlob and NewsAPI to match news keywords with CoinGecko price data. Ran Granger causality tests to analyze keyword-price relationships and deployed an interactive dashboard.",
     tech: ["Python", "TextBlob", "NewsAPI", "Pandas", "Docker", "Matplotlib"],
     github: "https://github.com/harshshri07",
     colStart: "md:col-start-1",
@@ -16,7 +17,8 @@ const projects = [
   {
     title: "AI-Powered Stock Trading Bot",
     category: "Reinforcement Learning",
-    description: "Trained a DQN agent in TensorFlow on market indicators (EMA, MACD) to optimize trade entry and exit. Simulated live trading with custom backtesting and integrated REST APIs for real-time data.",
+    description:
+      "Trained a DQN agent in TensorFlow on market indicators (EMA, MACD) to optimize trade entry and exit. Simulated live trading with custom backtesting and integrated REST APIs for real-time data.",
     tech: ["TensorFlow", "DQN", "NumPy", "REST APIs", "Backtesting"],
     github: "https://github.com/harshshri07",
     colStart: "md:col-start-5",
@@ -25,7 +27,8 @@ const projects = [
   {
     title: "Handwritten Character Recognition",
     category: "Mobile / Computer Vision",
-    description: "Built a mobile OCR app using Flutter and Google ML Kit to recognize handwritten characters in real time. Applied OpenCV techniques for preprocessing and optimized for on-device inference.",
+    description:
+      "Built a mobile OCR app using Flutter and Google ML Kit to recognize handwritten characters in real time. Applied OpenCV techniques for preprocessing and optimized for on-device inference.",
     tech: ["Flutter", "Google ML Kit", "OpenCV", "Android Studio"],
     github: "https://github.com/harshshri07",
     colStart: "md:col-start-1",
@@ -54,7 +57,7 @@ const ProjectsSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 0.8, ease }}
-            className={`grid grid-cols-12 gap-4`}
+            className="grid grid-cols-12 gap-4"
           >
             <div className={`col-span-12 ${project.colStart} ${project.colSpan}`}>
               <span className="font-mono text-xs uppercase tracking-widest text-accent">{project.category}</span>
@@ -87,3 +90,4 @@ const ProjectsSection = () => {
 };
 
 export default ProjectsSection;
+

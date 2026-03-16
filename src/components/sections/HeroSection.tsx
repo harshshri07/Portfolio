@@ -14,7 +14,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, ease }}
           className="flex items-center gap-3 mb-8"
         >
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-border">
+          <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden border border-border">
             <img src={headshot} alt="Harsh Shrishrimal" className="w-full h-full object-cover" />
           </div>
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ const HeroSection = () => {
             Get in Touch
           </a>
           <a
-            href="https://harshshri07.github.io/Harsh%20Shrishrimal%20Resume.pdf"
+            href="/Harsh%20Shrishrimal%20Resume.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3 border border-border text-foreground font-medium rounded-sm text-sm tracking-wide hover:bg-secondary transition-colors duration-200"
@@ -84,3 +84,4 @@ const HeroSection = () => {
 };
 
 export default HeroSection;
+
