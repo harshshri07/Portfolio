@@ -14,7 +14,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, ease }}
           className="flex items-center gap-3 mb-8"
         >
-          <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border border-border">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border border-border">
             <img src={headshot} alt="Harsh Shrishrimal" className="w-full h-full object-cover" />
           </div>
           <div className="flex items-center gap-2">
