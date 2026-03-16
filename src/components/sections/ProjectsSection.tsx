@@ -5,32 +5,32 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const projects = [
   {
-    title: "Bitcoin News Keyword Trend Analysis",
-    category: "NLP / Data Analysis",
+    title: "AI Hedge Fund – Multi-Agent Stock Analysis Platform",
+    category: "LLMs · Multi‑Agent Systems",
     description:
-      "Built an NLP pipeline using TextBlob and NewsAPI to match news keywords with CoinGecko price data. Ran Granger causality tests to analyze keyword-price relationships and deployed an interactive dashboard.",
-    tech: ["Python", "TextBlob", "NewsAPI", "Pandas", "Docker", "Matplotlib"],
-    github: "https://github.com/harshshri07",
+      "Built a LangGraph-based multi-agent system with five specialized AI agents that analyze equities, surface risks, and generate structured trade signals with confidence scores and position sizing.",
+    tech: ["LangGraph", "RAG", "ChromaDB", "Python", "Google Gemini", "OpenAI"],
+    github: "https://github.com/harshshri07/ai-hedge-fund",
     colStart: "md:col-start-1",
     colSpan: "md:col-span-8",
   },
   {
-    title: "AI-Powered Stock Trading Bot",
-    category: "Reinforcement Learning",
+    title: "MedTeller – Vision‑Language Radiology Report Generator",
+    category: "Vision · NLP · Healthcare",
     description:
-      "Trained a DQN agent in TensorFlow on market indicators (EMA, MACD) to optimize trade entry and exit. Simulated live trading with custom backtesting and integrated REST APIs for real-time data.",
-    tech: ["TensorFlow", "DQN", "NumPy", "REST APIs", "Backtesting"],
-    github: "https://github.com/harshshri07",
+      "Architected a multimodal pipeline combining Vision Transformers and GPT‑2 in PyTorch to generate structured radiology reports from 7.4K chest X‑rays, with custom preprocessing and attention tuning to improve clinical coherence.",
+    tech: ["PyTorch", "Vision Transformer", "GPT‑2", "Python", "Pandas"],
+    github: "https://github.com/harshshri07/MedTeller",
     colStart: "md:col-start-5",
     colSpan: "md:col-span-8",
   },
   {
-    title: "Handwritten Character Recognition",
-    category: "Mobile / Computer Vision",
+    title: "CAFB AI Document Generator",
+    category: "RAG · Vector Search",
     description:
-      "Built a mobile OCR app using Flutter and Google ML Kit to recognize handwritten characters in real time. Applied OpenCV techniques for preprocessing and optimized for on-device inference.",
-    tech: ["Flutter", "Google ML Kit", "OpenCV", "Android Studio"],
-    github: "https://github.com/harshshri07",
+      "Built a Retrieval‑Augmented Generation system using CLIP embeddings and Pinecone vector search to generate grounded documents from large corpora, achieving over 90% semantic retrieval accuracy.",
+    tech: ["CLIP", "Pinecone", "RAG", "Python", "FastAPI"],
+    github: "https://github.com/harshshri07/CAFB_AI",
     colStart: "md:col-start-1",
     colSpan: "md:col-span-8",
   },
@@ -46,7 +46,7 @@ const ProjectsSection = () => {
         transition={{ duration: 0.8, ease }}
       >
         <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground">Projects</span>
-        <h2 className="text-3xl md:text-4xl font-medium text-foreground mt-4">Selected Work</h2>
+        <h2 className="text-3xl md:text-4xl font-medium text-foreground mt-4">Featured AI & ML Projects</h2>
       </motion.div>
 
       <div className="mt-16 space-y-24">
