@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Award } from "lucide-react";
 
-const ease = [0.16, 1, 0.3, 1];
+const ease = [0.16, 1, 0.3, 1] as const;
 
 const certs = [
   { name: "Artificial Intelligence Fundamentals", issuer: "IBM" },
