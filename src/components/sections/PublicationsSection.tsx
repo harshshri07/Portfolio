@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FileText } from "lucide-react";
+import { FileText, Eye } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -20,7 +20,7 @@ const PublicationsSection = () => {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-10%" }}
         transition={{ duration: 0.8, delay: 0.1, ease }}
-        className="mt-12 border border-border rounded-sm p-6 md:p-8"
+        className="mt-12 border border-border rounded-sm p-6 md:p-8 hover:border-accent/40 hover:bg-secondary/10 transition-colors duration-200"
       >
         <div className="flex items-start gap-4">
           <FileText className="w-5 h-5 text-accent mt-1 shrink-0" strokeWidth={1.5} />
@@ -33,6 +33,15 @@ const PublicationsSection = () => {
               <span className="font-mono text-xs text-muted-foreground">Vol. 11, Issue 3, March 2023</span>
               <span className="font-mono text-xs text-accent">DOI: 10.15680/IJIRCCE.2023.1103081</span>
             </div>
+            <a
+              href="https://ijircce.com/admin/main/storage/app/pdf/6wUTmCpJrFQO5oQORBOWjb8QUdzdsgUiHTSQ3WFD.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-4 text-xs font-mono uppercase tracking-[0.2em] text-accent hover:underline"
+            >
+              <Eye className="w-3 h-3" strokeWidth={1.5} />
+              <span>Published Paper</span>
+            </a>
           </div>
         </div>
       </motion.div>

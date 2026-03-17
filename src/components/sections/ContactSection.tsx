@@ -38,7 +38,7 @@ const ContactSection = () => {
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
           >
             <Linkedin className="w-4 h-4" strokeWidth={1.5} />
-            LinkedIn
+            harsh-shrishrimal
           </a>
           <a
             href="https://github.com/harshshri07"
@@ -47,14 +47,14 @@ const ContactSection = () => {
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200"
           >
             <Github className="w-4 h-4" strokeWidth={1.5} />
-            GitHub
+            harshshri07
           </a>
         </div>
       </motion.div>
 
       <div className="mt-24 pt-8 border-t border-border">
         <p className="font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Harsh Shrishrimal. Built with precision.
+          © {new Date().getFullYear()} Harsh Shrishrimal. Always building what matters.
         </p>
       </div>
     </section>
