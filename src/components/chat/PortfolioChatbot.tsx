@@ -49,7 +49,9 @@ export function PortfolioChatbot() {
         throw new Error(
           res.ok
             ? "Unexpected response from the chat service."
-            : `Chat request failed (${res.status}). The /api/chat route may be missing — redeploy from the latest commit or check Vercel → Functions.`,
+            : res.status >= 500
+              ? `Server error (${res.status}). Open Vercel → your deployment → Logs, filter by /api/chat. If you see a crash, redeploy; if OPENAI_API_KEY is missing, add it under Settings → Environment Variables and redeploy.`
+              : `Chat request failed (${res.status}). Check that the latest commit is deployed and Vercel → Functions lists /api/chat.`,
         );
       }
 
