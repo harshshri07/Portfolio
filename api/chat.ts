@@ -1,5 +1,5 @@
-import { handleChatRequest, type ChatMessage } from "../server/chat-core";
-import { PORTFOLIO_KNOWLEDGE } from "../server/portfolio-knowledge";
+import { handleChatRequest, type ChatMessage } from "./lib/chat-core";
+import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",

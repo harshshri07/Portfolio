@@ -2,8 +2,8 @@ import path from "path";
 import type { IncomingMessage, ServerResponse } from "http";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import { handleChatRequest } from "./server/chat-core";
-import { PORTFOLIO_KNOWLEDGE } from "./server/portfolio-knowledge";
+import { handleChatRequest } from "./api/lib/chat-core";
+import { PORTFOLIO_KNOWLEDGE } from "./api/lib/portfolio-knowledge";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
