@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { handleChatRequest } from "./api/lib/chat-core";
+import { chatRouteErrorToHttp } from "./api/lib/openai-errors";
 import { PORTFOLIO_KNOWLEDGE } from "./api/lib/portfolio-knowledge";
 
 // https://vitejs.dev/config/
@@ -44,8 +45,7 @@ export default defineConfig(({ mode }) => {
                 res.setHeader("Content-Type", "application/json");
                 res.end(JSON.stringify({ reply }));
               } catch (e) {
-                const message = e instanceof Error ? e.message : "Chat failed";
-                const status = message.includes("OPENAI_API_KEY") ? 503 : 500;
+                const { status, message } = chatRouteErrorToHttp(e);
                 res.statusCode = status;
                 res.setHeader("Content-Type", "application/json");
                 res.end(JSON.stringify({ error: message }));

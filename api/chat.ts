@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleChatRequest, type ChatMessage } from "./lib/chat-core.js";
+import { chatRouteErrorToHttp } from "./lib/openai-errors.js";
 import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -34,8 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const reply = await handleChatRequest(trimmed, PORTFOLIO_KNOWLEDGE, process.env.OPENAI_API_KEY);
     return res.status(200).json({ reply });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Chat failed";
-    const status = message.includes("OPENAI_API_KEY") ? 503 : 500;
+    const { status, message } = chatRouteErrorToHttp(e);
     return res.status(status).json({ error: message });
   }
 }
