@@ -41,23 +41,36 @@ export function PortfolioChatbot() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
-      const data = (await res.json()) as { reply?: string; error?: string };
+      const raw = await res.text();
+      let data: { reply?: string; error?: string } = {};
+      try {
+        data = raw ? (JSON.parse(raw) as { reply?: string; error?: string }) : {};
+      } catch {
+        throw new Error(
+          res.ok
+            ? "Unexpected response from the chat service."
+            : `Chat request failed (${res.status}). The /api/chat route may be missing — redeploy from the latest commit or check Vercel → Functions.`,
+        );
+      }
+
       if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
+        throw new Error(
+          data.error ||
+            (res.status === 503
+              ? "OPENAI_API_KEY is not set for this deployment. In Vercel: Settings → Environment Variables → add OPENAI_API_KEY for Production, then redeploy."
+              : `Request failed (${res.status}).`),
+        );
       }
       if (!data.reply) {
-        throw new Error("No reply");
+        throw new Error(data.error || "No reply from the assistant.");
       }
       setMessages([...thread, { role: "assistant", content: data.reply }]);
-    } catch {
-      setMessages([
-        ...thread,
-        {
-          role: "assistant",
-          content:
-            "Sorry — I couldn't reach the assistant. Add OPENAI_API_KEY to your environment (Vercel project settings or a local .env file for dev).",
-        },
-      ]);
+    } catch (e) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Sorry — something went wrong. Try again in a moment.";
+      setMessages([...thread, { role: "assistant", content: message }]);
     } finally {
       setLoading(false);
     }
