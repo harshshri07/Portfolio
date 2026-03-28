@@ -59,7 +59,7 @@ export function PortfolioChatbot() {
         throw new Error(
           data.error ||
             (res.status === 503
-              ? "No Gemini API key for this deployment. In Vercel: Settings → Environment Variables → add GEMINI_API_KEY or GOOGLE_API_KEY for Production, then redeploy."
+              ? "No Gemini API key for this deployment. In Vercel: Settings → Environment Variables → add GEMINI_API_KEY or GOOGLE_API_KEY, enable All Environments (or Production + Preview), then redeploy."
               : `Request failed (${res.status}).`),
         );
       }
