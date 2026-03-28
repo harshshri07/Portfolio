@@ -1,40 +1,40 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleChatRequest, type ChatMessage } from "./lib/chat-core";
 import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge";
 
-const corsHeaders: Record<string, string> = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+export default async function handler(req: VercelRequest, res: VercelResponse) {  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    return res.status(204).end();
+  }
 
-function jsonError(message: string, status: number) {
-  return Response.json({ error: message }, { status, headers: corsHeaders });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Content-Type", "application/json");
+
+  try {
+    let body: unknown = req.body;
+    if (typeof body === "string") {
+      body = body ? JSON.parse(body) : {};
+    }
+    if (body == null || typeof body !== "object") {
+      return res.status(400).json({ error: "Invalid JSON body" });
+    }
+    const messages = (body as { messages?: ChatMessage[] }).messages;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: "Missing messages" });
+    }
+
+    const trimmed = messages.slice(-12);
+    const reply = await handleChatRequest(trimmed, PORTFOLIO_KNOWLEDGE, process.env.OPENAI_API_KEY);
+    return res.status(200).json({ reply });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Chat failed";
+    const status = message.includes("OPENAI_API_KEY") ? 503 : 500;
+    return res.status(status).json({ error: message });
+  }
 }
-
-/** Web handler (default export) — most reliable on Vercel vs named POST/OPTIONS exports. */
-export default {
-  async fetch(request: Request): Promise<Response> {
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
-    }
-    if (request.method !== "POST") {
-      return jsonError("Method not allowed", 405);
-    }
-
-    try {
-      const body = (await request.json()) as { messages?: ChatMessage[] };
-      const messages = body?.messages;
-      if (!Array.isArray(messages) || messages.length === 0) {
-        return jsonError("Missing messages", 400);
-      }
-
-      const trimmed = messages.slice(-12);
-      const reply = await handleChatRequest(trimmed, PORTFOLIO_KNOWLEDGE, process.env.OPENAI_API_KEY);
-      return Response.json({ reply }, { headers: corsHeaders });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Chat failed";
-      const status = message.includes("OPENAI_API_KEY") ? 503 : 500;
-      return jsonError(message, status);
-    }
-  },
-};
