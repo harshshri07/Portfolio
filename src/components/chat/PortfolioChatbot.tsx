@@ -50,7 +50,7 @@ export function PortfolioChatbot() {
           res.ok
             ? "Unexpected response from the chat service."
             : res.status >= 500
-              ? `Server error (${res.status}). Open Vercel → your deployment → Logs, filter by /api/chat. If you see a crash, redeploy; if OPENAI_API_KEY is missing, add it under Settings → Environment Variables and redeploy.`
+              ? `Server error (${res.status}). Open Vercel → your deployment → Logs, filter by /api/chat. If you see a crash, redeploy; if GEMINI_API_KEY is missing, add it under Settings → Environment Variables and redeploy.`
               : `Chat request failed (${res.status}). Check that the latest commit is deployed and Vercel → Functions lists /api/chat.`,
         );
       }
@@ -59,7 +59,7 @@ export function PortfolioChatbot() {
         throw new Error(
           data.error ||
             (res.status === 503
-              ? "OPENAI_API_KEY is not set for this deployment. In Vercel: Settings → Environment Variables → add OPENAI_API_KEY for Production, then redeploy."
+              ? "GEMINI_API_KEY is not set for this deployment. In Vercel: Settings → Environment Variables → add GEMINI_API_KEY for Production, then redeploy."
               : `Request failed (${res.status}).`),
         );
       }

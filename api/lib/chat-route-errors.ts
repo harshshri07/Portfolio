@@ -1,20 +1,20 @@
-import { APIError } from "openai";
+import { GoogleGenerativeAIFetchError } from "@google/generative-ai";
 
-/** Map thrown errors to HTTP status + safe client message (OpenAI quota → 429, not 500). */
+/** Map thrown errors to HTTP status + safe client message. */
 export function chatRouteErrorToHttp(e: unknown): { status: number; message: string } {
-  if (e instanceof APIError) {
+  if (e instanceof GoogleGenerativeAIFetchError) {
     const status = e.status ?? 500;
     if (status === 429) {
       return {
         status: 429,
         message:
-          "OpenAI quota or rate limit reached. Add credits or check billing at https://platform.openai.com/account/billing — then try again.",
+          "Gemini quota or rate limit reached. Check limits at https://ai.google.dev/gemini-api/docs/rate-limits and your Google AI Studio project.",
       };
     }
     return { status, message: e.message };
   }
   const message = e instanceof Error ? e.message : "Chat failed";
-  if (message.includes("OPENAI_API_KEY")) {
+  if (message.includes("GEMINI_API_KEY")) {
     return { status: 503, message };
   }
   return { status: 500, message };

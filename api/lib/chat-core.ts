@@ -1,6 +1,8 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
+
+const DEFAULT_MODEL = "gemini-2.0-flash";
 
 const SYSTEM_INSTRUCTIONS = `You are the chat assistant on Harsh Shrishrimal's portfolio website.
 
@@ -22,24 +24,45 @@ export async function handleChatRequest(
   messages: ChatMessage[],
   knowledgeBase: string,
   apiKey: string | undefined,
+  modelName?: string,
 ): Promise<string> {
   if (!apiKey?.trim()) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    throw new Error("GEMINI_API_KEY is not configured");
   }
 
-  const openai = new OpenAI({ apiKey });
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.5,
-    max_tokens: 700,
-    messages: [
-      { role: "system", content: SYSTEM_INSTRUCTIONS + knowledgeBase },
-      ...messages.filter((m) => m.role === "user" || m.role === "assistant"),
-    ],
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName?.trim() || DEFAULT_MODEL,
+    systemInstruction: SYSTEM_INSTRUCTIONS + knowledgeBase,
+    generationConfig: {
+      temperature: 0.5,
+      maxOutputTokens: 700,
+    },
   });
 
-  const text = completion.choices[0]?.message?.content?.trim();
+  const filtered = messages.filter((m) => m.role === "user" || m.role === "assistant");
+  if (filtered.length === 0) {
+    throw new Error("No messages");
+  }
+
+  const last = filtered[filtered.length - 1];
+  if (last.role !== "user") {
+    throw new Error("Last message must be from the user");
+  }
+
+  const history: { role: "user" | "model"; parts: { text: string }[] }[] = [];
+  for (let i = 0; i < filtered.length - 1; i++) {
+    const m = filtered[i];
+    if (m.role === "user") {
+      history.push({ role: "user", parts: [{ text: m.content }] });
+    } else {
+      history.push({ role: "model", parts: [{ text: m.content }] });
+    }
+  }
+
+  const chat = model.startChat({ history });
+  const result = await chat.sendMessage(last.content);
+  const text = result.response.text()?.trim();
   if (!text) {
     throw new Error("Empty response from model");
   }
