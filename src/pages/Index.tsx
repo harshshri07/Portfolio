@@ -8,11 +8,13 @@ import CertificationsSection from "@/components/sections/CertificationsSection";
 import SkillsSection from "@/components/sections/SkillsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import FloatingNav from "@/components/layout/FloatingNav";
+import { PortfolioChatbot } from "@/components/chat/PortfolioChatbot";
 
 const Index = () => {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <FloatingNav />
+      <PortfolioChatbot />
       <HeroSection />
       <AboutSection />
       <EducationSection />
