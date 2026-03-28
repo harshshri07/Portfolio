@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleChatRequest, type ChatMessage } from "./lib/chat-core";
-import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge";
+import { handleChatRequest, type ChatMessage } from "./lib/chat-core.js";
+import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge.js";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {  if (req.method === "OPTIONS") {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type");
