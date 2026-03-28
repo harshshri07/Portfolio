@@ -28,7 +28,7 @@ export async function handleChatRequest(
 ): Promise<string> {
   if (!apiKey?.trim()) {
     throw new Error(
-      "No Gemini API key is configured. Add GEMINI_API_KEY (or GOOGLE_API_KEY) in Vercel → Settings → Environment Variables for Production, then redeploy.",
+      "No Gemini API key is configured. In Vercel → Settings → Environment Variables, add GEMINI_API_KEY (or GOOGLE_API_KEY) and enable it for All Environments (or both Production and Preview), then redeploy.",
     );
   }
 
@@ -43,6 +43,12 @@ export async function handleChatRequest(
   });
 
   const filtered = messages.filter((m) => m.role === "user" || m.role === "assistant");
+
+  // Gemini requires chat history to start with role "user", not "model". The UI may prepend a welcome assistant message.
+  while (filtered.length > 0 && filtered[0].role === "assistant") {
+    filtered.shift();
+  }
+
   if (filtered.length === 0) {
     throw new Error("No messages");
   }
