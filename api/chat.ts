@@ -1,35 +1,30 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleChatRequest, type ChatMessage } from "../server/chat-core";
 import { PORTFOLIO_KNOWLEDGE } from "../server/portfolio-knowledge";
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method === "OPTIONS") {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    return res.status(204).end();
-  }
+const corsHeaders: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+export async function OPTIONS(): Promise<Response> {
+  return new Response(null, { status: 204, headers: corsHeaders });
+}
 
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Content-Type", "application/json");
-
+export async function POST(request: Request): Promise<Response> {
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const messages = body?.messages as ChatMessage[] | undefined;
+    const body = (await request.json()) as { messages?: ChatMessage[] };
+    const messages = body?.messages;
     if (!Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: "Missing messages" });
+      return Response.json({ error: "Missing messages" }, { status: 400, headers: corsHeaders });
     }
 
     const trimmed = messages.slice(-12);
     const reply = await handleChatRequest(trimmed, PORTFOLIO_KNOWLEDGE, process.env.OPENAI_API_KEY);
-    return res.status(200).json({ reply });
+    return Response.json({ reply }, { headers: corsHeaders });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Chat failed";
     const status = message.includes("OPENAI_API_KEY") ? 503 : 500;
-    return res.status(status).json({ error: message });
+    return Response.json({ error: message }, { status, headers: corsHeaders });
   }
 }
