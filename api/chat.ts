@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleChatRequest, type ChatMessage } from "./lib/chat-core.js";
 import { chatRouteErrorToHttp } from "./lib/chat-route-errors.js";
+import { getGeminiApiKey } from "./lib/gemini-env.js";
 import { PORTFOLIO_KNOWLEDGE } from "./lib/portfolio-knowledge.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -35,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const reply = await handleChatRequest(
       trimmed,
       PORTFOLIO_KNOWLEDGE,
-      process.env.GEMINI_API_KEY,
+      getGeminiApiKey(),
       process.env.GEMINI_MODEL,
     );
     return res.status(200).json({ reply });

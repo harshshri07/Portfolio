@@ -27,7 +27,9 @@ export async function handleChatRequest(
   modelName?: string,
 ): Promise<string> {
   if (!apiKey?.trim()) {
-    throw new Error("GEMINI_API_KEY is not configured");
+    throw new Error(
+      "No Gemini API key is configured. Add GEMINI_API_KEY (or GOOGLE_API_KEY) in Vercel → Settings → Environment Variables for Production, then redeploy.",
+    );
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);

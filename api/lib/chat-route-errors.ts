@@ -14,7 +14,7 @@ export function chatRouteErrorToHttp(e: unknown): { status: number; message: str
     return { status, message: e.message };
   }
   const message = e instanceof Error ? e.message : "Chat failed";
-  if (message.includes("GEMINI_API_KEY")) {
+  if (message.includes("No Gemini API key") || message.includes("Gemini API key")) {
     return { status: 503, message };
   }
   return { status: 500, message };
