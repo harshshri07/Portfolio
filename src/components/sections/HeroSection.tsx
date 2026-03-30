@@ -4,6 +4,9 @@ import headshot from "@/assets/headshot.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+/** Served from `public/Harsh Shrishrimal - Resume.pdf`. */
+const RESUME_HREF = "/Harsh%20Shrishrimal%20-%20Resume.pdf";
+
 const HeroSection = () => {
   return (
     <section
@@ -67,7 +70,7 @@ const HeroSection = () => {
             Get in Touch
           </a>
           <a
-            href="/Harsh%20Shrishrimal%20Resume.pdf"
+            href={RESUME_HREF}
             target="_blank"
             rel="noopener noreferrer"
             className="px-6 py-3 border border-border text-foreground font-medium rounded-sm text-sm tracking-wide hover:bg-secondary transition-colors duration-200"

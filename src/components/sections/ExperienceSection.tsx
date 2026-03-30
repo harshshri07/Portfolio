@@ -7,7 +7,7 @@ const experiences = [
     title: "Artificial Intelligence Intern",
     company: "Converge Technology Solutions",
     location: "New York, NY (Remote)",
-    date: "Jun 2025 — Aug 2025",
+    date: "Jun 2025 - Aug 2025",
     bullets: [
       "Developed OWASP-based AI pentesting modules using Django, Celery, and DSPy to detect LLM vulnerabilities",
       "Integrated shared memory context and MIPROv2 optimizer, boosting injection accuracy to a 4.5/5 success grade",
@@ -19,7 +19,7 @@ const experiences = [
     title: "Machine Learning Engineer",
     company: "Shanti Technologies",
     location: "Pune, India",
-    date: "Jul 2023 — Jun 2024",
+    date: "Jul 2023 - Jun 2024",
     bullets: [
       "Trained TensorFlow models on historical sales data to minimize stockouts for perishable goods",
       "Developed dynamic pricing algorithms integrating seasonal and behavioral logic via custom APIs",
@@ -57,7 +57,7 @@ const ExperienceSection = () => {
             <div className="col-span-12 md:col-span-9">
               <h3 className="text-xl md:text-2xl font-medium text-foreground">{exp.title}</h3>
               <p className="text-accent text-sm mt-1">
-                {exp.company} — {exp.location}
+                {exp.company} · {exp.location}
               </p>
               <ul className="mt-4 space-y-2">
                 {exp.bullets.map((b, j) => (

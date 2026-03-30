@@ -1,4 +1,4 @@
-# Portfolio Perfection – Harsh Shrishrimal
+# Portfolio Perfection - Harsh Shrishrimal
 
 This is a personal portfolio site for **Harsh Shrishrimal**, a Data Science graduate student. It showcases projects, skills, education, certifications, publications, and experience, with a downloadable PDF resume.
 

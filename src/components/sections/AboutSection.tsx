@@ -22,7 +22,7 @@ const AboutSection = () => {
         </p>
         <p className="mt-4 text-muted-foreground prose-body text-base md:text-lg">
           With experience at Converge Technology Solutions and Shanti Technologies, I've worked on LLM security, dynamic
-          pricing algorithms, and recommendation systems — always focused on shipping production-quality work.
+          pricing algorithms, and recommendation systems, always focused on shipping production-quality work.
         </p>
       </motion.div>
     </section>

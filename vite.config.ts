@@ -47,6 +47,12 @@ export default defineConfig(({ mode }) => {
                 const raw = Buffer.concat(chunks).toString("utf8");
                 const body = JSON.parse(raw || "{}");
                 const messages = body.messages;
+                if (!Array.isArray(messages) || messages.length === 0) {
+                  res.statusCode = 400;
+                  res.setHeader("Content-Type", "application/json");
+                  res.end(JSON.stringify({ error: "Missing or invalid messages" }));
+                  return;
+                }
                 const reply = await handleChatRequest(
                   messages,
                   PORTFOLIO_KNOWLEDGE,
