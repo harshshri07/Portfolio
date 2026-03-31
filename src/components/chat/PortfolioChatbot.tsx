@@ -249,7 +249,7 @@ export function PortfolioChatbot() {
                   </button>
                 </div>
                 <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  AI chatbot: answers follow Harsh&apos;s public profile and are written in first person on purpose.
+                  AI replies as Harsh, based on his public profile.
                   {cooldownLeft > 0 ? (
                     <span className="mt-1 block text-amber-600/90 dark:text-amber-400/90">
                       Gemini free tier is strict: wait, then try one message at a time. For higher limits, add billing in
