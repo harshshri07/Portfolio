@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Loader2 } from "lucide-react";
+import { X, Send, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -25,7 +25,7 @@ function FormattedMessage({ text }: { text: string }) {
 }
 
 const WELCOME =
-  "Hi, I'm Harsh. Ask me about my background, projects, skills, or how to get in touch.";
+  "Hi! You're talking to an AI chatbot built from my profile. I answer in my voice, so ask me anything about my background, projects, skills, or how to get in touch.";
 
 /** Spacing between sends helps stay under free-tier RPM. */
 const MIN_MS_BETWEEN_SENDS = 4000;
@@ -128,31 +128,72 @@ export function PortfolioChatbot() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3 md:bottom-8 md:right-8">
-        <AnimatePresence>
+      <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2 md:bottom-8 md:right-8 md:gap-3">
+        <AnimatePresence mode="wait">
+          {!open && (
+            <motion.button
+              key="chat-teaser"
+              type="button"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setOpen(true)}
+              className="hidden max-w-[min(100vw-2rem,20rem)] items-center gap-2.5 rounded-full border border-accent/50 bg-background/95 px-3 py-2.5 text-left shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-accent hover:bg-secondary/40 md:flex"
+              aria-label="Open AI chat: ask about Harsh"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+                <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium leading-tight text-foreground">Chat with Harsh</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+                  AI answers as me about my work
+                </span>
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence mode="wait">
           {open && (
             <motion.div
+              key="chat-panel"
               initial={{ opacity: 0, y: 16, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.96 }}
               transition={{ duration: 0.2 }}
-              className="flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-sm border border-border bg-background/95 shadow-2xl backdrop-blur-md sm:w-[min(100vw-2.5rem,24rem)] md:w-[min(100vw-3rem,26rem)] lg:w-[min(100vw-4rem,28rem)] xl:w-[min(100vw-5rem,30rem)]"
+              className="flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-lg border border-accent/25 bg-background/95 shadow-[0_12px_48px_rgba(0,0,0,0.45)] shadow-accent/5 backdrop-blur-md sm:w-[min(100vw-2.5rem,24rem)] md:w-[min(100vw-3rem,26rem)] lg:w-[min(100vw-4rem,28rem)] xl:w-[min(100vw-5rem,30rem)]"
             >
-              <div className="flex items-center justify-between border-b border-border px-4 py-3 md:px-5">
-                <div className="flex items-center gap-2">
-                  <MessageCircle className="h-4 w-4 text-accent" strokeWidth={1.5} />
-                  <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                    Ask Harsh
-                  </span>
+              <div className="border-b border-accent/20 bg-gradient-to-br from-accent/10 via-background/80 to-background px-4 py-3.5 md:px-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent/20 text-accent">
+                      <Sparkles className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-foreground">
+                          Ask Harsh
+                        </span>
+                        <span className="rounded-sm bg-accent/20 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-accent">
+                          AI chat
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                        Ask this bot questions about me. It replies in my voice from my public profile.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="shrink-0 rounded-sm p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    aria-label="Close chat"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="rounded-sm p-1 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  aria-label="Close chat"
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </div>
 
               <div className="max-h-[min(50vh,320px)] space-y-3 overflow-y-auto px-4 py-3 md:max-h-[min(56vh,440px)] md:px-5 lg:max-h-[min(60vh,520px)] xl:max-h-[min(68vh,620px)]">
@@ -192,7 +233,7 @@ export function PortfolioChatbot() {
                     placeholder={
                       cooldownLeft > 0
                         ? `Rate limited: wait ${cooldownLeft}s…`
-                        : "Ask about projects, skills, contact…"
+                        : "Ask the AI about my work, skills, contact…"
                     }
                     className="min-h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent md:min-h-11 md:text-[15px]"
                     disabled={loading || cooldownLeft > 0}
@@ -207,8 +248,8 @@ export function PortfolioChatbot() {
                     <Send className="h-4 w-4" />
                   </button>
                 </div>
-                <p className="mt-2 font-mono text-[10px] text-muted-foreground">
-                  Answers are AI-assisted and based on Harsh&apos;s public profile.
+                <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  AI chatbot: answers follow Harsh&apos;s public profile and are written in first person on purpose.
                   {cooldownLeft > 0 ? (
                     <span className="mt-1 block text-amber-600/90 dark:text-amber-400/90">
                       Gemini free tier is strict: wait, then try one message at a time. For higher limits, add billing in
@@ -224,10 +265,22 @@ export function PortfolioChatbot() {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-border bg-background/90 text-accent shadow-lg backdrop-blur-md transition hover:border-accent/50 hover:bg-secondary/10"
-          aria-label={open ? "Close chat" : "Open chat"}
+          className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent/45 bg-background/95 text-accent shadow-[0_4px_24px_rgba(56,189,248,0.25)] backdrop-blur-md transition hover:scale-[1.04] hover:border-accent hover:shadow-[0_6px_28px_rgba(56,189,248,0.35)] active:scale-[0.98] md:h-[3.75rem] md:w-[3.75rem]"
+          aria-label={
+            open
+              ? "Close AI chat"
+              : "Open AI chat with Harsh (answers as Harsh about his profile)"
+          }
         >
-          {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" strokeWidth={1.5} />}
+          {!open && (
+            <span
+              className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold uppercase leading-none text-accent-foreground shadow-sm"
+              aria-hidden
+            >
+              AI
+            </span>
+          )}
+          {open ? <X className="h-6 w-6 md:h-7 md:w-7" /> : <Sparkles className="h-6 w-6 md:h-7 md:w-7" strokeWidth={1.5} />}
         </button>
       </div>
     </>
