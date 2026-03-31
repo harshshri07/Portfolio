@@ -25,7 +25,7 @@ function FormattedMessage({ text }: { text: string }) {
 }
 
 const WELCOME =
-  "Hi! You're talking to an AI chatbot built from my profile. I answer in my voice, so ask me anything about my background, projects, skills, or how to get in touch.";
+  "Hi! Ask me about my background, projects, skills, or how to get in touch.";
 
 /** Spacing between sends helps stay under free-tier RPM. */
 const MIN_MS_BETWEEN_SENDS = 4000;
