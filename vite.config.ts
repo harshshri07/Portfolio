@@ -2,7 +2,7 @@ import path from "path";
 import type { IncomingMessage, ServerResponse } from "http";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import { handleChatRequest } from "./api/lib/chat-core";
+import { streamChatRequest } from "./api/lib/chat-core";
 import { chatRouteErrorToHttp } from "./api/lib/chat-route-errors";
 import { PORTFOLIO_KNOWLEDGE } from "./api/lib/portfolio-knowledge";
 
@@ -46,19 +46,22 @@ export default defineConfig(({ mode }) => {
                 const body = JSON.parse(raw || "{}");
                 const messages = body.messages;
                 if (!Array.isArray(messages) || messages.length === 0) {
-                  res.statusCode = 400;
-                  res.setHeader("Content-Type", "application/json");
-                  res.end(JSON.stringify({ error: "Missing or invalid messages" }));
+                  res.setHeader("Content-Type", "text/event-stream");
+                  res.end(`data: ${JSON.stringify({ error: "Missing or invalid messages" })}\n\n`);
                   return;
                 }
-                const reply = await handleChatRequest(messages, PORTFOLIO_KNOWLEDGE);
-                res.setHeader("Content-Type", "application/json");
-                res.end(JSON.stringify({ reply }));
+                res.setHeader("Content-Type", "text/event-stream");
+                res.setHeader("Cache-Control", "no-cache");
+                res.setHeader("Connection", "keep-alive");
+                for await (const chunk of streamChatRequest(messages, PORTFOLIO_KNOWLEDGE)) {
+                  res.write(`data: ${JSON.stringify({ delta: chunk })}\n\n`);
+                }
+                res.write("data: [DONE]\n\n");
+                res.end();
               } catch (e) {
-                const { status, message } = chatRouteErrorToHttp(e);
-                res.statusCode = status;
-                res.setHeader("Content-Type", "application/json");
-                res.end(JSON.stringify({ error: message }));
+                const { message } = chatRouteErrorToHttp(e);
+                res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+                res.end();
               }
             });
           });

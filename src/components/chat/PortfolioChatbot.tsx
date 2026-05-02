@@ -1,48 +1,169 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Loader2, Sparkles } from "lucide-react";
+import { X, Send, Loader2, Sparkles, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-/** Split assistant text on blank lines so multi-paragraph replies are readable. */
-function FormattedMessage({ text }: { text: string }) {
+/** Render a single line of text, converting **bold** to <strong>. */
+function InlineLine({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={i}>{part.slice(2, -2)}</strong>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
+/** Split assistant text on blank lines; render bullet lines as a list. */
+function FormattedMessage({ text, streaming }: { text: string; streaming?: boolean }) {
   const blocks = text.trim().split(/\n\n+/);
   return (
     <div className="space-y-2.5">
-      {blocks.map((block, i) => (
-        <p key={i} className="m-0 leading-relaxed">
-          {block.split("\n").map((line, j, lines) => (
-            <span key={j}>
-              {line}
-              {j < lines.length - 1 ? <br /> : null}
-            </span>
-          ))}
-        </p>
-      ))}
+      {blocks.map((block, i) => {
+        const lines = block.split("\n");
+        const isList = lines.length > 1 && lines.every((l) => l.trim().startsWith("- "));
+        if (isList) {
+          return (
+            <ul key={i} className="m-0 space-y-0.5 pl-4 list-disc">
+              {lines.map((l, j) => (
+                <li key={j} className="leading-relaxed">
+                  <InlineLine text={l.trim().slice(2)} />
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        const isLast = i === blocks.length - 1;
+        return (
+          <p key={i} className="m-0 leading-relaxed">
+            {lines.map((line, j) => (
+              <span key={j}>
+                <InlineLine text={line} />
+                {j < lines.length - 1 ? <br /> : null}
+              </span>
+            ))}
+            {isLast && streaming && (
+              <span className="inline-block w-0.5 h-[1em] bg-current opacity-70 animate-pulse ml-0.5 align-middle" />
+            )}
+          </p>
+        );
+      })}
     </div>
   );
 }
 
-const WELCOME =
-  "Hi! Ask me about my background, projects, skills, or how to get in touch.";
+/** Parse SSE stream from /api/chat, calling onChunk for each text delta and onError on failure. */
+async function streamFetch(
+  apiMessages: { role: string; content: string }[],
+  onChunk: (text: string) => void,
+  onError: (msg: string) => void,
+): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: apiMessages }),
+    });
+  } catch {
+    onError("Network error. Check your connection and try again.");
+    return;
+  }
 
-/** Spacing between sends helps stay under free-tier RPM. */
+  if (!res.body) {
+    onError(`Request failed (${res.status}).`);
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() ?? "";
+
+    for (const part of parts) {
+      const line = part.trim();
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6);
+      if (raw === "[DONE]") return;
+      try {
+        const parsed = JSON.parse(raw) as { delta?: string; error?: string };
+        if (parsed.error) { onError(parsed.error); return; }
+        if (parsed.delta) onChunk(parsed.delta);
+      } catch {
+        // malformed chunk — skip
+      }
+    }
+  }
+}
+
+const WELCOME = "Hi! Ask me about my background, projects, skills, or how to get in touch.";
+const INITIAL_MESSAGES: Msg[] = [{ role: "assistant", content: WELCOME }];
+
+const SUGGESTED_QUESTIONS = [
+  "What are your best projects?",
+  "What roles are you looking for?",
+  "How do I get in touch?",
+];
+
 const MIN_MS_BETWEEN_SENDS = 4000;
-/** After a 429, block new sends briefly so repeated tries do not burn the quota faster. */
 const COOLDOWN_AFTER_429_SEC = 90;
+
+/** Daily message budget per visitor (resets after 24 h). */
+const DAILY_LIMIT = 7;
+const STORAGE_KEY = "hs_chat_usage";
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+interface UsageRecord { count: number; windowStart: number }
+
+function getUsage(): UsageRecord {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const rec = JSON.parse(raw) as UsageRecord;
+      if (Date.now() - rec.windowStart < ONE_DAY_MS) return rec;
+    }
+  } catch { /* ignore */ }
+  return { count: 0, windowStart: Date.now() };
+}
+
+function consumeMessage(): number {
+  const rec = getUsage();
+  const updated = { ...rec, count: rec.count + 1 };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch { /* ignore */ }
+  return DAILY_LIMIT - updated.count;
+}
+
+function remainingMessages(): number {
+  return Math.max(0, DAILY_LIMIT - getUsage().count);
+}
 
 export function PortfolioChatbot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: WELCOME }]);
+  const [messages, setMessages] = useState<Msg[]>(INITIAL_MESSAGES);
   const [loading, setLoading] = useState(false);
-  /** Seconds left before user can send again (after rate limit). */
   const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [remaining, setRemaining] = useState(() => remainingMessages());
   const bottomRef = useRef<HTMLDivElement>(null);
   const lastSendAtRef = useRef(0);
-  /** Blocks duplicate sends before React flips `loading` (e.g. double-clicks). */
   const sendInFlightRef = useRef(false);
+
+  const budgetExhausted = remaining <= 0;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -57,74 +178,59 @@ export function PortfolioChatbot() {
     return () => window.clearInterval(id);
   }, [cooldownActive]);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
-    if (!text || loading || sendInFlightRef.current || cooldownLeft > 0) return;
-    const now = Date.now();
-    if (now - lastSendAtRef.current < MIN_MS_BETWEEN_SENDS) {
-      return;
-    }
-    lastSendAtRef.current = now;
+  const sendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim() || loading || sendInFlightRef.current || cooldownLeft > 0) return;
+      if (remainingMessages() <= 0) { setRemaining(0); return; }
+      const now = Date.now();
+      if (now - lastSendAtRef.current < MIN_MS_BETWEEN_SENDS) return;
+      lastSendAtRef.current = now;
+      sendInFlightRef.current = true;
+      setRemaining(consumeMessage());
 
-    sendInFlightRef.current = true;
-    setInput("");
-    const userMsg: Msg = { role: "user", content: text };
-    const thread = [...messages, userMsg];
-    setMessages(thread);
-    setLoading(true);
+      const userMsg: Msg = { role: "user", content: text.trim() };
+      const thread = [...messages, userMsg];
+      // Add placeholder assistant message that gets filled in as chunks arrive
+      setMessages([...thread, { role: "assistant", content: "" }]);
+      setLoading(true);
 
-    try {
-      const apiMessages = thread.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const apiMessages = thread.map((m) => ({ role: m.role, content: m.content }));
+      let fullText = "";
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages }),
-      });
+      await streamFetch(
+        apiMessages,
+        (chunk) => {
+          fullText += chunk;
+          setMessages([...thread, { role: "assistant", content: fullText }]);
+        },
+        (errMsg) => {
+          if (/429|rate.?limit|throttl/i.test(errMsg)) {
+            setCooldownLeft(COOLDOWN_AFTER_429_SEC);
+          }
+          setMessages([...thread, { role: "assistant", content: errMsg }]);
+        },
+      );
 
-      const raw = await res.text();
-      let data: { reply?: string; error?: string } = {};
-      try {
-        data = raw ? (JSON.parse(raw) as { reply?: string; error?: string }) : {};
-      } catch {
-        throw new Error(
-          res.ok
-            ? "Unexpected response from the chat service."
-            : res.status >= 500
-              ? `Server error (${res.status}). Locally: check the terminal running npm run dev. Deployed: check your host's logs and environment variables for the chat API.`
-              : `Chat request failed (${res.status}). Locally: ensure npm run dev is running. Deployed: check your host's deployment and /api/chat route.`,
-        );
-      }
-
-      if (!res.ok) {
-        if (res.status === 429) {
-          setCooldownLeft(COOLDOWN_AFTER_429_SEC);
-        }
-        throw new Error(
-          data.error ||
-            (res.status === 503
-              ? "No Gemini API key configured. Locally: add GEMINI_API_KEY or GOOGLE_API_KEY to .env and restart npm run dev. Deployed: set the same variables in your host's dashboard and redeploy."
-              : `Request failed (${res.status}).`),
-        );
-      }
-      if (!data.reply) {
-        throw new Error(data.error || "No reply from the assistant.");
-      }
-      setMessages([...thread, { role: "assistant", content: data.reply }]);
-    } catch (e) {
-      const message =
-        e instanceof Error
-          ? e.message
-          : "Sorry, something went wrong. Try again in a moment.";
-      setMessages([...thread, { role: "assistant", content: message }]);
-    } finally {
       sendInFlightRef.current = false;
       setLoading(false);
-    }
-  }, [input, loading, messages, cooldownLeft]);
+    },
+    [messages, loading, cooldownLeft],
+  );
+
+  const send = useCallback(() => {
+    const text = input.trim();
+    setInput("");
+    sendMessage(text);
+  }, [input, sendMessage]);
+
+  const reset = useCallback(() => {
+    setMessages(INITIAL_MESSAGES);
+    setInput("");
+    setCooldownLeft(0);
+  }, []);
+
+  const disabled = loading || cooldownLeft > 0 || budgetExhausted;
+  const isStreaming = loading && messages[messages.length - 1]?.role === "assistant";
 
   return (
     <>
@@ -165,6 +271,7 @@ export function PortfolioChatbot() {
               transition={{ duration: 0.2 }}
               className="flex w-[min(100vw-2rem,22rem)] flex-col overflow-hidden rounded-lg border border-accent/25 bg-background/95 shadow-[0_12px_48px_rgba(0,0,0,0.45)] shadow-accent/5 backdrop-blur-md sm:w-[min(100vw-2.5rem,24rem)] md:w-[min(100vw-3rem,26rem)] lg:w-[min(100vw-4rem,28rem)] xl:w-[min(100vw-5rem,30rem)]"
             >
+              {/* Header */}
               <div className="border-b border-accent/20 bg-gradient-to-br from-accent/10 via-background/80 to-background px-4 py-3.5 md:px-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -185,103 +292,173 @@ export function PortfolioChatbot() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="shrink-0 rounded-sm p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-                    aria-label="Close chat"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={reset}
+                      className="rounded-sm p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      aria-label="Clear chat"
+                      title="Clear chat"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="rounded-sm p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      aria-label="Close chat"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
+              {/* Messages */}
               <div className="max-h-[min(50vh,320px)] space-y-3 overflow-y-auto px-4 py-3 md:max-h-[min(56vh,440px)] md:px-5 lg:max-h-[min(60vh,520px)] xl:max-h-[min(68vh,620px)]">
-                {messages.map((m, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "rounded-sm px-3 py-2 text-sm leading-relaxed md:text-[15px] md:leading-relaxed",
-                      m.role === "user"
-                        ? "ml-6 bg-accent/15 text-foreground"
-                        : "mr-4 max-w-none border border-border/60 bg-secondary/30 text-muted-foreground",
-                    )}
-                  >
-                    {m.role === "assistant" ? <FormattedMessage text={m.content} /> : m.content}
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Thinking…
-                  </div>
-                )}
+                {messages.map((m, i) => {
+                  const isStreamingThis = isStreaming && i === messages.length - 1;
+                  return (
+                    <div key={i}>
+                      <div
+                        className={cn(
+                          "rounded-sm px-3 py-2 text-sm leading-relaxed md:text-[15px] md:leading-relaxed",
+                          m.role === "user"
+                            ? "ml-6 bg-accent/15 text-foreground"
+                            : "mr-4 max-w-none border border-border/60 bg-secondary/30 text-muted-foreground",
+                        )}
+                      >
+                        {m.role === "assistant" ? (
+                          m.content === "" && loading ? (
+                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground/60">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Thinking…
+                            </span>
+                          ) : (
+                            <FormattedMessage text={m.content} streaming={isStreamingThis} />
+                          )
+                        ) : (
+                          m.content
+                        )}
+                      </div>
+                      {/* Suggested question chips — only below the welcome message */}
+                      {i === 0 && messages.length === 1 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
+                          {SUGGESTED_QUESTIONS.map((q) => (
+                            <button
+                              key={q}
+                              type="button"
+                              onClick={() => sendMessage(q)}
+                              className="rounded-full border border-accent/30 bg-accent/8 px-2.5 py-1 text-[11px] text-accent/80 transition hover:border-accent/60 hover:bg-accent/15 hover:text-accent md:text-xs"
+                            >
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 <div ref={bottomRef} />
               </div>
 
+              {/* Input */}
               <div className="border-t border-border p-3 md:p-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter" || e.shiftKey) return;
-                      e.preventDefault();
-                      send();
-                    }}
-                    placeholder={
-                      cooldownLeft > 0
-                        ? `Rate limited: wait ${cooldownLeft}s…`
-                        : "Ask the AI about my work, skills, contact…"
-                    }
-                    className="min-h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent md:min-h-11 md:text-[15px]"
-                    disabled={loading || cooldownLeft > 0}
-                  />
-                  <button
-                    type="button"
-                    onClick={send}
-                    disabled={loading || !input.trim() || cooldownLeft > 0}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-sm bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-40 md:h-11 md:w-11"
-                    aria-label="Send"
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  AI replies as Harsh, based on his public profile.
-                  {cooldownLeft > 0 ? (
-                    <span className="mt-1 block text-amber-600/90 dark:text-amber-400/90">
-                      Gemini free tier is strict: wait, then try one message at a time. For higher limits, add billing in
-                      Google AI Studio.
-                    </span>
-                  ) : null}
-                </p>
+                {budgetExhausted ? (
+                  <p className="rounded-sm border border-border/60 bg-secondary/30 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
+                    You've reached the daily message limit. Reach me directly at{" "}
+                    <a
+                      href="mailto:shrishrimal38@gmail.com"
+                      className="text-accent underline underline-offset-2"
+                    >
+                      shrishrimal38@gmail.com
+                    </a>{" "}
+                    or on{" "}
+                    <a
+                      href="https://linkedin.com/in/harsh-shrishrimal"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline underline-offset-2"
+                    >
+                      LinkedIn
+                    </a>
+                    . Limit resets in 24 hours.
+                  </p>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key !== "Enter" || e.shiftKey) return;
+                        e.preventDefault();
+                        send();
+                      }}
+                      placeholder={
+                        cooldownLeft > 0
+                          ? `Rate limited: wait ${cooldownLeft}s…`
+                          : "Ask the AI about my work, skills, contact…"
+                      }
+                      className="min-h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent md:min-h-11 md:text-[15px]"
+                      disabled={disabled}
+                    />
+                    <button
+                      type="button"
+                      onClick={send}
+                      disabled={disabled || !input.trim()}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-sm bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-40 md:h-11 md:w-11"
+                      aria-label="Send"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                {!budgetExhausted && (
+                  <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                    AI replies as Harsh, based on his public profile.
+                    {remaining <= 3 && remaining > 0 && (
+                      <span className="ml-1 text-amber-600/80 dark:text-amber-400/80">
+                        {remaining} message{remaining === 1 ? "" : "s"} left today.
+                      </span>
+                    )}
+                    {cooldownLeft > 0 && (
+                      <span className="mt-1 block text-amber-600/90 dark:text-amber-400/90">
+                        Rate limited. Wait a moment, then try again.
+                      </span>
+                    )}
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent/45 bg-background/95 text-accent shadow-[0_4px_24px_rgba(56,189,248,0.25)] backdrop-blur-md transition hover:scale-[1.04] hover:border-accent hover:shadow-[0_6px_28px_rgba(56,189,248,0.35)] active:scale-[0.98] md:h-[3.75rem] md:w-[3.75rem]"
-          aria-label={
-            open
-              ? "Close AI chat"
-              : "Open AI chat with Harsh (answers as Harsh about his profile)"
-          }
-        >
+        {/* FAB */}
+        <div className="flex flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-accent/45 bg-background/95 text-accent shadow-[0_4px_24px_rgba(56,189,248,0.25)] backdrop-blur-md transition hover:scale-[1.04] hover:border-accent hover:shadow-[0_6px_28px_rgba(56,189,248,0.35)] active:scale-[0.98] md:h-[3.75rem] md:w-[3.75rem]"
+            aria-label={open ? "Close AI chat" : "Open AI chat with Harsh"}
+          >
+            {!open && (
+              <span
+                className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold uppercase leading-none text-accent-foreground shadow-sm"
+                aria-hidden
+              >
+                AI
+              </span>
+            )}
+            {open ? <X className="h-6 w-6 md:h-7 md:w-7" /> : <Sparkles className="h-6 w-6 md:h-7 md:w-7" strokeWidth={1.5} />}
+          </button>
+          {/* Mobile label — hidden on md+ where the teaser pill already shows */}
           {!open && (
-            <span
-              className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-accent px-1 font-mono text-[9px] font-bold uppercase leading-none text-accent-foreground shadow-sm"
-              aria-hidden
-            >
-              AI
+            <span className="font-mono text-[10px] text-muted-foreground md:hidden">
+              Ask Harsh
             </span>
           )}
-          {open ? <X className="h-6 w-6 md:h-7 md:w-7" /> : <Sparkles className="h-6 w-6 md:h-7 md:w-7" strokeWidth={1.5} />}
-        </button>
+        </div>
       </div>
     </>
   );
