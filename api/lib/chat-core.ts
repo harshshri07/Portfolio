@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import type { Message } from "@aws-sdk/client-bedrock-runtime";
+import { getBedrockConfig } from "./bedrock-config.js";
 
 export type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
-
-const DEFAULT_MODEL = "gemini-2.5-flash";
 
 const SYSTEM_INSTRUCTIONS = `You are Harsh Shrishrimal replying to visitors in the chat widget on your own portfolio site. Always answer in first person as yourself ("I", "my", "me") for anything about your background, work, or goals.
 
@@ -25,67 +25,38 @@ Formatting (readability in chat):
 KNOWLEDGE:
 `;
 
-type GeminiHistory = { role: "user" | "model"; parts: { text: string }[] }[];
-
-/** Single request, no 429 retries (retries usually hit the same quota and waste RPM on free tier). */
-async function sendGeminiMessage(
-  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
-  history: GeminiHistory,
-  lastUserText: string,
-): Promise<string> {
-  // First user turn: use generateContent (same API call, avoids empty-history chat quirks in some SDK paths).
-  if (history.length === 0) {
-    const result = await model.generateContent(lastUserText);
-    const text = result.response.text()?.trim();
-    if (!text) {
-      throw new Error("Empty response from model");
-    }
-    return text;
-  }
-
-  const chat = model.startChat({ history });
-  const result = await chat.sendMessage(lastUserText);
-  const text = result.response.text()?.trim();
-  if (!text) {
-    throw new Error("Empty response from model");
-  }
-  return text;
-}
-
 export async function handleChatRequest(
   messages: ChatMessage[],
   knowledgeBase: string,
-  apiKey: string | undefined,
-  modelName?: string,
 ): Promise<string> {
   if (!Array.isArray(messages) || messages.length === 0) {
     throw new Error("Invalid or missing messages");
   }
 
-  if (!apiKey?.trim()) {
-    throw new Error(
-      "No Gemini API key is configured. Locally: add GEMINI_API_KEY or GOOGLE_API_KEY to .env and restart the dev server. Deployed: set the same variables in your host (e.g. Vercel project → Environment Variables) and redeploy.",
-    );
+  const config = getBedrockConfig();
+
+  const clientConfig: ConstructorParameters<typeof BedrockRuntimeClient>[0] = {
+    region: config.region,
+  };
+
+  if (config.accessKeyId && config.secretAccessKey) {
+    clientConfig.credentials = {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+      ...(config.sessionToken ? { sessionToken: config.sessionToken } : {}),
+    };
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: modelName?.trim() || DEFAULT_MODEL,
-    systemInstruction: SYSTEM_INSTRUCTIONS + knowledgeBase,
-    generationConfig: {
-      temperature: 0.5,
-      maxOutputTokens: 512,
-    },
-  });
+  const client = new BedrockRuntimeClient(clientConfig);
 
   let filtered = messages.filter((m) => m.role === "user" || m.role === "assistant");
 
-  // Gemini requires chat history to start with role "user", not "model". The UI may prepend a welcome assistant message.
+  // Bedrock Converse requires the conversation to start with role "user".
   while (filtered.length > 0 && filtered[0].role === "assistant") {
     filtered.shift();
   }
 
-  // Long threads inflate tokens on every turn; cap to reduce TPM pressure (free tier).
+  // Cap long threads to reduce token usage per turn.
   const MAX_CHAT_MESSAGES = 24;
   if (filtered.length > MAX_CHAT_MESSAGES) {
     let start = filtered.length - MAX_CHAT_MESSAGES;
@@ -104,15 +75,26 @@ export async function handleChatRequest(
     throw new Error("Last message must be from the user");
   }
 
-  const history: GeminiHistory = [];
-  for (let i = 0; i < filtered.length - 1; i++) {
-    const m = filtered[i];
-    if (m.role === "user") {
-      history.push({ role: "user", parts: [{ text: m.content }] });
-    } else {
-      history.push({ role: "model", parts: [{ text: m.content }] });
-    }
-  }
+  const bedrockMessages: Message[] = filtered.map((m) => ({
+    role: m.role as "user" | "assistant",
+    content: [{ text: m.content }],
+  }));
 
-  return sendGeminiMessage(model, history, last.content);
+  const response = await client.send(
+    new ConverseCommand({
+      modelId: config.modelId,
+      system: [{ text: SYSTEM_INSTRUCTIONS + knowledgeBase }],
+      messages: bedrockMessages,
+      inferenceConfig: {
+        temperature: 0.5,
+        maxTokens: 512,
+      },
+    }),
+  );
+
+  const text = response.output?.message?.content?.[0]?.text?.trim();
+  if (!text) {
+    throw new Error("Empty response from model");
+  }
+  return text;
 }

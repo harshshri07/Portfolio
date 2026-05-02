@@ -4,23 +4,21 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { handleChatRequest } from "./api/lib/chat-core";
 import { chatRouteErrorToHttp } from "./api/lib/chat-route-errors";
-import { getGeminiApiKey } from "./api/lib/gemini-env";
 import { PORTFOLIO_KNOWLEDGE } from "./api/lib/portfolio-knowledge";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  if (env.GEMINI_API_KEY) {
-    process.env.GEMINI_API_KEY = env.GEMINI_API_KEY;
-  }
-  if (env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY = env.GOOGLE_GENERATIVE_AI_API_KEY;
-  }
-  if (env.GOOGLE_API_KEY) {
-    process.env.GOOGLE_API_KEY = env.GOOGLE_API_KEY;
-  }
-  if (env.GEMINI_MODEL) {
-    process.env.GEMINI_MODEL = env.GEMINI_MODEL;
+  // Forward AWS / Bedrock env vars from .env into process.env for the dev-server middleware.
+  const awsVars = [
+    "AWS_REGION",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+    "BEDROCK_MODEL_ID",
+  ] as const;
+  for (const key of awsVars) {
+    if (env[key]) process.env[key] = env[key];
   }
 
   return {
@@ -53,12 +51,7 @@ export default defineConfig(({ mode }) => {
                   res.end(JSON.stringify({ error: "Missing or invalid messages" }));
                   return;
                 }
-                const reply = await handleChatRequest(
-                  messages,
-                  PORTFOLIO_KNOWLEDGE,
-                  getGeminiApiKey(),
-                  process.env.GEMINI_MODEL,
-                );
+                const reply = await handleChatRequest(messages, PORTFOLIO_KNOWLEDGE);
                 res.setHeader("Content-Type", "application/json");
                 res.end(JSON.stringify({ reply }));
               } catch (e) {
