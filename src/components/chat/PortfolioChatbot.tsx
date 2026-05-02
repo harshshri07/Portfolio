@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Loader2, Sparkles, RotateCcw } from "lucide-react";
+import { track } from "@vercel/analytics";
 import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -152,10 +153,66 @@ function remainingMessages(): number {
   return Math.max(0, DAILY_LIMIT - getUsage().count);
 }
 
+// ── Conversation persistence ──────────────────────────────────────────────────
+const CONV_KEY = "hs_chat_conv";
+
+function loadConversation(): Msg[] {
+  try {
+    const raw = localStorage.getItem(CONV_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Msg[];
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return [INITIAL_MESSAGES[0], ...parsed];
+      }
+    }
+  } catch { /* ignore */ }
+  return INITIAL_MESSAGES;
+}
+
+function saveConversation(msgs: Msg[]): void {
+  try {
+    const toSave = msgs.slice(1); // drop welcome message
+    if (toSave.length > 0) localStorage.setItem(CONV_KEY, JSON.stringify(toSave));
+    else localStorage.removeItem(CONV_KEY);
+  } catch { /* ignore */ }
+}
+
+// ── Response cache ────────────────────────────────────────────────────────────
+const CACHE_KEY = "hs_chat_cache";
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MAX_CACHE_ENTRIES = 40;
+
+interface CacheEntry { reply: string; ts: number }
+type CacheStore = Record<string, CacheEntry>;
+
+function normalizeQ(q: string): string {
+  return q.toLowerCase().trim().replace(/\s+/g, " ");
+}
+
+function getCached(question: string): string | null {
+  try {
+    const store = JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}") as CacheStore;
+    const entry = store[normalizeQ(question)];
+    if (entry && Date.now() - entry.ts < CACHE_TTL_MS) return entry.reply;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function setCached(question: string, reply: string): void {
+  try {
+    const store = JSON.parse(localStorage.getItem(CACHE_KEY) ?? "{}") as CacheStore;
+    store[normalizeQ(question)] = { reply, ts: Date.now() };
+    const pruned = Object.fromEntries(
+      Object.entries(store).sort((a, b) => b[1].ts - a[1].ts).slice(0, MAX_CACHE_ENTRIES),
+    );
+    localStorage.setItem(CACHE_KEY, JSON.stringify(pruned));
+  } catch { /* ignore */ }
+}
+
 export function PortfolioChatbot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Msg[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<Msg[]>(() => loadConversation());
   const [loading, setLoading] = useState(false);
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [remaining, setRemaining] = useState(() => remainingMessages());
@@ -169,6 +226,10 @@ export function PortfolioChatbot() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  useEffect(() => {
+    saveConversation(messages);
+  }, [messages]);
+
   const cooldownActive = cooldownLeft > 0;
   useEffect(() => {
     if (!cooldownActive) return;
@@ -181,6 +242,18 @@ export function PortfolioChatbot() {
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || loading || sendInFlightRef.current || cooldownLeft > 0) return;
+
+      const userMsg: Msg = { role: "user", content: text.trim() };
+      const thread = [...messages, userMsg];
+
+      // Serve from cache — no API call, no budget cost
+      const cached = getCached(text.trim());
+      if (cached) {
+        setMessages([...thread, { role: "assistant", content: cached }]);
+        track("chat_cache_hit", { question: text.slice(0, 100) });
+        return;
+      }
+
       if (remainingMessages() <= 0) { setRemaining(0); return; }
       const now = Date.now();
       if (now - lastSendAtRef.current < MIN_MS_BETWEEN_SENDS) return;
@@ -188,9 +261,8 @@ export function PortfolioChatbot() {
       sendInFlightRef.current = true;
       setRemaining(consumeMessage());
 
-      const userMsg: Msg = { role: "user", content: text.trim() };
-      const thread = [...messages, userMsg];
-      // Add placeholder assistant message that gets filled in as chunks arrive
+      track("chat_message", { question: text.slice(0, 100) });
+
       setMessages([...thread, { role: "assistant", content: "" }]);
       setLoading(true);
 
@@ -211,6 +283,8 @@ export function PortfolioChatbot() {
         },
       );
 
+      if (fullText) setCached(text.trim(), fullText);
+
       sendInFlightRef.current = false;
       setLoading(false);
     },
@@ -227,6 +301,7 @@ export function PortfolioChatbot() {
     setMessages(INITIAL_MESSAGES);
     setInput("");
     setCooldownLeft(0);
+    try { localStorage.removeItem(CONV_KEY); } catch { /* ignore */ }
   }, []);
 
   const disabled = loading || cooldownLeft > 0 || budgetExhausted;
