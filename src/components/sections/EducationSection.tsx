@@ -6,14 +6,14 @@ const education = [
   {
     degree: "Master of Science in Data Science",
     school: "University of Maryland, College Park",
-    date: "Expected May 2026",
-    gpa: "3.73/4.0",
-    courses: ["Probability & Statistics", "Machine Learning", "Cloud Computing", "NLP", "Deep Learning"],
+    date: "Aug 2024 - May 2026",
+    gpa: "3.81/4.0",
+    courses: ["Machine Learning", "Deep Learning", "NLP", "Big Data Systems", "Computer Vision"],
   },
   {
     degree: "Bachelor of Engineering in Computer Science",
     school: "Savitribai Phule Pune University, India",
-    date: "Jun 2023",
+    date: "Aug 2019 - Jun 2023",
     gpa: "3.2/4.0",
     courses: ["Database Management", "Business Intelligence", "Data Science & Big Data", "AI"],
   },
@@ -60,4 +60,3 @@ const EducationSection = () => {
 };
 
 export default EducationSection;
-

@@ -9,15 +9,19 @@ import { PORTFOLIO_KNOWLEDGE } from "./api/lib/portfolio-knowledge";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  // Forward AWS / Bedrock env vars from .env into process.env for the dev-server middleware.
-  const awsVars = [
-    "AWS_REGION",
-    "AWS_ACCESS_KEY_ID",
-    "AWS_SECRET_ACCESS_KEY",
-    "AWS_SESSION_TOKEN",
-    "BEDROCK_MODEL_ID",
+  // Forward Azure AI Foundry + Upstash env vars from .env into process.env for the dev middleware.
+  const serverVars = [
+    "AZURE_OPENAI_ENDPOINT",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_DEPLOYMENT_NAME",
+    "AZURE_OPENAI_API_VERSION",
+    "AZURE_AI_ENDPOINT",
+    "AZURE_AI_API_KEY",
+    "AZURE_AI_DEPLOYMENT_NAME",
+    "KV_REST_API_URL",
+    "KV_REST_API_TOKEN",
   ] as const;
-  for (const key of awsVars) {
+  for (const key of serverVars) {
     if (env[key]) process.env[key] = env[key];
   }
 

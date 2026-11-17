@@ -6,62 +6,65 @@ export function chatRouteErrorToHttp(e: unknown): { status: number; message: str
 
   const name = e.name;
   const msg = e.message || "";
+  const status =
+    (e as { status?: number }).status ??
+    (e as { statusCode?: number }).statusCode ??
+    undefined;
 
-  // AWS SDK v3 error names from BedrockRuntime
-  if (name === "ThrottlingException" || name === "TooManyRequestsException") {
+  if (
+    name === "RateLimitError" ||
+    status === 429 ||
+    /rate.?limit|too many requests|throttl/i.test(msg)
+  ) {
     return {
       status: 429,
       message:
-        "AWS Bedrock rate limit reached. Wait a moment and try again, or request a quota increase in the AWS console.",
+        "Azure AI rate limit reached. Wait a moment and try again.",
     };
   }
 
-  if (name === "AccessDeniedException") {
+  if (
+    name === "AuthenticationError" ||
+    status === 401 ||
+    /unauthorized|invalid.?api.?key|authentication/i.test(msg)
+  ) {
+    return {
+      status: 401,
+      message:
+        "Azure AI rejected the API key. Check AZURE_OPENAI_API_KEY in .env (local) or Vercel Environment Variables (deployed), then restart / redeploy.",
+    };
+  }
+
+  if (status === 403) {
     return {
       status: 403,
       message:
-        "AWS Bedrock access denied. Verify that your IAM credentials have the bedrock:InvokeModel permission and that the model is enabled in your AWS account (Bedrock console → Model access).",
+        "Azure AI access denied. Verify the API key, endpoint, and that the deployment is enabled in Azure AI Foundry.",
     };
   }
 
-  if (name === "ValidationException") {
-    if (/model.*not.*found|no such model|not supported/i.test(msg)) {
-      return {
-        status: 400,
-        message: `Bedrock model not found or not supported: ${msg}. Set BEDROCK_MODEL_ID to a valid inference-profile ID (e.g. us.anthropic.claude-haiku-4-5-20251001-v1:0) and restart.`,
-      };
-    }
-    return { status: 400, message: `Bedrock validation error: ${msg}` };
-  }
-
-  if (name === "ModelNotReadyException") {
-    return { status: 503, message: "The Bedrock model is not ready yet. Try again in a moment." };
-  }
-
-  if (name === "ServiceUnavailableException") {
-    return { status: 503, message: "AWS Bedrock is temporarily unavailable. Try again later." };
-  }
-
-  if (name === "ModelErrorException") {
-    return { status: 500, message: `Bedrock model error: ${msg}` };
-  }
-
-  // Credential / config errors surfaced as generic Error
   if (
-    /could not load credentials|no credentials|credential/i.test(msg)
+    status === 404 ||
+    /deployment.?not.?found|model.?not.?found|404/i.test(msg)
   ) {
+    return {
+      status: 400,
+      message:
+        "Azure deployment not found. Set AZURE_OPENAI_DEPLOYMENT_NAME to your Foundry deployment name and restart.",
+    };
+  }
+
+  if (/Azure AI Foundry is not configured/i.test(msg)) {
+    return { status: 503, message: msg };
+  }
+
+  if (name === "APIConnectionError" || /fetch failed|ECONNREFUSED|ENOTFOUND/i.test(msg)) {
     return {
       status: 503,
       message:
-        "AWS credentials not configured. Locally: add AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to .env and restart the dev server. Deployed: set the same variables in your host environment (e.g. Vercel project → Environment Variables) and redeploy.",
+        "Could not reach Azure AI Foundry. Check AZURE_OPENAI_ENDPOINT and your network connection.",
     };
   }
 
-  // Fall back to the HTTP status embedded in AWS SDK $metadata if present
-  const meta = (e as unknown as { $metadata?: { httpStatusCode?: number } }).$metadata;
-  if (meta?.httpStatusCode) {
-    return { status: meta.httpStatusCode, message: msg || "AWS Bedrock request failed" };
-  }
-
-  return { status: 500, message: msg || "Chat failed" };
+  return { status: status && status >= 400 ? status : 500, message: msg || "Chat failed" };
 }

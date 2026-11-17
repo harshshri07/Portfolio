@@ -16,13 +16,13 @@ const AboutSection = () => {
           Building at the intersection of AI and engineering
         </h2>
         <p className="mt-6 text-muted-foreground prose-body text-base md:text-lg">
-          I'm a Data Science graduate student at the University of Maryland, College Park, with a strong foundation in
-          Machine Learning, AI, and software development. I specialize in building AI-powered solutions, developing ML
-          models, and creating innovative applications that solve real-world problems.
+          I'm a Data Science graduate from the University of Maryland, College Park. I build AI agents, RAG systems, and
+          production ML pipelines that move from raw data to something people can actually use.
         </p>
         <p className="mt-4 text-muted-foreground prose-body text-base md:text-lg">
-          With experience at Converge Technology Solutions and Shanti Technologies, I've worked on LLM security, dynamic
-          pricing algorithms, and recommendation systems, always focused on shipping production-quality work.
+          I've shipped multi-agent systems at Cloudforce and Mercor, hardened LLM chatbots against prompt injection at
+          Converge, and built forecasting and recommendation systems at Shanti Technologies. Always focused on
+          production-quality work, not just demos.
         </p>
       </motion.div>
     </section>
@@ -30,4 +30,3 @@ const AboutSection = () => {
 };
 
 export default AboutSection;
-

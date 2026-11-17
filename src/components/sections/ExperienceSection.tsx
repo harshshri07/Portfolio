@@ -4,16 +4,40 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const experiences = [
   {
+    title: "AI Trainer, Writer (Project Odin)",
+    company: "Mercor",
+    location: "Remote",
+    date: "Oct 2026 - Present",
+    bullets: [
+      "Build expert demonstrations that train frontier AI agents to complete real data analysis work, from raw files to final deliverable",
+      "Design realistic analysis tasks and datasets, then model the full expert reasoning behind each decision",
+      "Pass each demonstration through multi-stage expert review before it is accepted as training data for AI systems",
+    ],
+    tech: ["AI Training Data", "AI Agents", "Data Analysis"],
+  },
+  {
+    title: "AI Solutions Intern",
+    company: "Cloudforce",
+    location: "Oxon Hill, MD",
+    date: "Jul 2026 - Oct 2026",
+    bullets: [
+      "Cut token usage by 50% (165K to 82K) by redesigning a single agent into an orchestrator with 3 MCP-backed sub-agents",
+      "Built a knowledgebase agent and its Confluence MCP server, then trained all Cloudforce employees on it, cutting search time",
+      "Created a Model Health Insights agent and MCP server that scores 5 weighted health factors from live data in a dashboard",
+    ],
+    tech: ["Python", "MCP", "Multi-Agent Systems", "nebulaONE", "Azure"],
+  },
+  {
     title: "Artificial Intelligence Intern",
     company: "Converge Technology Solutions",
-    location: "New York, NY (Remote)",
+    location: "New York, NY",
     date: "Jun 2025 - Aug 2025",
     bullets: [
-      "Developed OWASP-based AI pentesting modules using Django, Celery, and DSPy to detect LLM vulnerabilities",
-      "Integrated shared memory context and MIPROv2 optimizer, boosting injection accuracy to a 4.5/5 success grade",
-      "Enhanced UI and built auto-stop attack flow using WebSockets, reducing manual testing time",
+      "Tuned prompts with DSPy across 4 LLMs (GPT, Mistral, LLaMA, Qwen) to harden enterprise chatbots against prompt injection, raising vulnerability detection precision by 30%",
+      "Ran 150+ adversarial test scenarios to find where the 4 models hallucinate or fail, with schema-validated outputs",
+      "Packaged the evaluation pipeline in Docker with MLflow tracking and CI/CD, cutting manual evaluation overhead by 20%",
     ],
-    tech: ["Django", "Celery", "DSPy", "WebSockets", "Docker"],
+    tech: ["Python", "DSPy", "LLMs", "MLflow", "Docker", "CI/CD"],
   },
   {
     title: "Machine Learning Engineer",
@@ -21,11 +45,11 @@ const experiences = [
     location: "Pune, India",
     date: "Jul 2023 - Jun 2024",
     bullets: [
-      "Trained TensorFlow models on historical sales data to minimize stockouts for perishable goods",
-      "Developed dynamic pricing algorithms integrating seasonal and behavioral logic via custom APIs",
-      "Designed ETL pipelines with Apache Airflow and Google Cloud Functions for automated data flow",
+      "Trained TensorFlow and PyTorch demand forecasting models with seasonality and holiday features, cutting inventory stockouts by 18%",
+      "Scaled Airflow and GCP ETL pipelines to 2M+ daily records within a 25-minute SLA, powering real-time demand analytics",
+      "Deployed recommendation models through FastAPI with automated retraining, lifting loyalty engagement by 15%",
     ],
-    tech: ["TensorFlow", "Python", "Apache Airflow", "Google Cloud", "ETL"],
+    tech: ["Python", "TensorFlow", "PyTorch", "Apache Airflow", "GCP", "FastAPI"],
   },
 ];
 
@@ -85,4 +109,3 @@ const ExperienceSection = () => {
 };
 
 export default ExperienceSection;
-

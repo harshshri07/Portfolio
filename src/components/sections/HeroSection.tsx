@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import headshot from "@/assets/headshot.png";
+import headshot from "@/assets/headshot.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -25,7 +25,11 @@ const HeroSection = () => {
           className="flex flex-col items-center gap-4"
         >
           <div className="h-40 w-40 md:h-48 md:w-48 lg:h-56 lg:w-56 rounded-full overflow-hidden border border-border/80 shadow-[0_22px_60px_rgba(0,0,0,0.6)] bg-gradient-to-tr from-background via-background to-accent/15">
-            <img src={headshot} alt="Harsh Shrishrimal" className="h-full w-full object-cover" />
+            <img
+              src={headshot}
+              alt="Harsh Shrishrimal"
+              className="h-full w-full object-cover object-[center_20%]"
+            />
           </div>
 
           <div className="flex items-center gap-2 mt-6">
@@ -53,8 +57,8 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.25, ease }}
           className="max-w-xl text-base md:text-lg text-muted-foreground prose-body"
         >
-          Data Science graduate student building AI-powered solutions, ML models, and scalable systems at the
-          intersection of research and engineering.
+          Data Science graduate building AI agents, RAG systems, and production ML pipelines at the intersection of
+          research and engineering.
         </motion.p>
 
         <motion.div

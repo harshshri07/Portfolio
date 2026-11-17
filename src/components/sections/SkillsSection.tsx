@@ -4,44 +4,49 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const skillGroups = [
   {
-    title: "Languages",
-    skills: ["Python", "R", "SQL", "C++", "JavaScript", "Java", "HTML"],
+    title: "Languages & Databases",
+    skills: ["Python", "SQL", "TypeScript", "JavaScript", "R", "PostgreSQL", "MongoDB", "Redis"],
   },
   {
-    title: "Data & ML",
+    title: "Machine Learning",
     skills: [
-      "Pandas",
-      "NumPy",
-      "Matplotlib",
-      "Seaborn",
-      "Plotly",
-      "Tableau",
-      "TensorFlow",
       "PyTorch",
-      "OpenCV",
+      "TensorFlow",
       "Scikit-learn",
-      "DSPy",
-    ],
-  },
-  {
-    title: "AI & Web",
-    skills: [
+      "XGBoost",
+      "Transformers",
+      "Computer Vision",
       "NLP",
-      "LLMs",
-      "Reinforcement Learning",
-      "Generative AI",
-      "RecSys",
-      "Django",
-      "Flask",
-      "Celery",
-      "REST APIs",
-      "WebSockets",
-      "Flutter",
+      "Time-Series Forecasting",
     ],
   },
   {
-    title: "Cloud & Tools",
-    skills: ["Google Cloud", "BigQuery", "AWS", "Apache Airflow", "Hadoop", "Spark", "Docker", "Git", "Jupyter"],
+    title: "LLMs & Agents",
+    skills: [
+      "LangGraph",
+      "LangChain",
+      "RAG",
+      "MCP",
+      "DSPy",
+      "Prompt Engineering",
+      "LLM Evaluation",
+      "pgvector",
+      "Pinecone",
+    ],
+  },
+  {
+    title: "MLOps & Cloud",
+    skills: [
+      "MLflow",
+      "Docker",
+      "CI/CD",
+      "GitHub Actions",
+      "Apache Airflow",
+      "FastAPI",
+      "AWS Bedrock",
+      "Azure",
+      "GCP",
+    ],
   },
 ];
 
@@ -86,4 +91,3 @@ const SkillsSection = () => {
 };
 
 export default SkillsSection;
-
