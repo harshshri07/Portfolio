@@ -38,6 +38,47 @@ const projects = [
     tech: ["Python", "SQL", "Pandas", "GeoJSON", "GCP"],
     github: "https://github.com/harshshri07/NourishNet",
   },
+  {
+    title: "AI Hedge Fund - Multi-Agent Stock Analysis Platform",
+    category: "LLMs · Multi-Agent Systems",
+    description:
+      "Built a LangGraph-based multi-agent system with five specialized AI agents that analyze equities, surface risks, and generate structured trade signals with confidence scores and position sizing.",
+    tech: ["LangGraph", "RAG", "ChromaDB", "Python", "Google Gemini", "OpenAI"],
+    github: "https://github.com/harshshri07/ai-hedge-fund",
+  },
+  {
+    title: "CAFB AI Document Generator",
+    category: "RAG · Vector Search",
+    description:
+      "Built a Retrieval-Augmented Generation system using CLIP embeddings and Pinecone vector search to generate grounded documents from large corpora, achieving over 90% semantic retrieval accuracy.",
+    tech: ["CLIP", "Pinecone", "RAG", "Python", "FastAPI"],
+    github: "https://github.com/harshshri07/CAFB_AI",
+  },
+  {
+    title: "Career Shield - Fake Job Posting Detector",
+    category: "NLP · Applied ML",
+    description:
+      "NLP-based fraud detection system that detects fake job postings using a fine-tuned DistilBERT classifier, rule-based scam patterns, and impossible requirements checks, reaching 98% accuracy on an 18K-sample dataset.",
+    tech: ["DistilBERT", "PyTorch", "Transformers", "Streamlit", "scikit-learn"],
+    github: "https://github.com/harshshri07/career-shield",
+    demo: "https://career-shield.streamlit.app/",
+  },
+  {
+    title: "UMBC Student Success Dashboard",
+    category: "Graphs · ML · Generative AI",
+    description:
+      "AI-powered academic advisory platform built for UMBC Hackathon that uses a Neo4j graph database, ML risk models, and a FastAPI backend to provide personalized course recommendations, risk assessment, and mentorship matching for students.",
+    tech: ["Neo4j", "FastAPI", "Python", "LightGBM", "Google Generative AI"],
+    github: "https://github.com/Info-stats-ai/UMBC_Hack_DoIT",
+  },
+  {
+    title: "TerpTracker - Personal Finance Dashboard",
+    category: "Cloud · Full-Stack",
+    description:
+      "AWS-hosted Flask web app that lets users track expenses with DynamoDB-backed storage, monthly summaries, and interactive visualizations, including secure auth and Dockerized local development.",
+    tech: ["Flask", "AWS DynamoDB", "Docker", "Python", "HTML"],
+    github: "https://github.com/harshshri07/TerpTracker",
+  },
 ];
 
 const ProjectsSection = () => {

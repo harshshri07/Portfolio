@@ -37,7 +37,7 @@ const experiences = [
       "Ran 150+ adversarial test scenarios to find where the 4 models hallucinate or fail, with schema-validated outputs",
       "Packaged the evaluation pipeline in Docker with MLflow tracking and CI/CD, cutting manual evaluation overhead by 20%",
     ],
-    tech: ["Python", "DSPy", "LLMs", "MLflow", "Docker", "CI/CD"],
+    tech: ["Python", "DSPy", "LLMs", "MLflow", "Docker", "CI/CD", "Django", "Celery", "WebSockets"],
   },
   {
     title: "Machine Learning Engineer",
@@ -49,7 +49,7 @@ const experiences = [
       "Scaled Airflow and GCP ETL pipelines to 2M+ daily records within a 25-minute SLA, powering real-time demand analytics",
       "Deployed recommendation models through FastAPI with automated retraining, lifting loyalty engagement by 15%",
     ],
-    tech: ["Python", "TensorFlow", "PyTorch", "Apache Airflow", "GCP", "FastAPI"],
+    tech: ["Python", "TensorFlow", "PyTorch", "Apache Airflow", "GCP", "FastAPI", "Flask", "ETL", "Docker"],
   },
 ];
 
